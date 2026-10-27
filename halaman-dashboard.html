@@ -1,0 +1,635 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MyPortfolio Dashboard</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #f5f6fa;
+      --card: #ffffff;
+      --text: #1e293b;
+      --muted: #64748b;
+      --border: #e8edf4;
+      --primary: #6366f1;
+    }
+
+    body.dark {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --border: #334155;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      transition: .3s;
+    }
+
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      width: 245px;
+      background: var(--card);
+      border-right: 1px solid var(--border);
+      padding: 28px 18px;
+      position: fixed;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      z-index: 10;
+    }
+
+    .logo {
+      font-size: 22px;
+      font-weight: bold;
+      margin: 0 0 38px 8px;
+    }
+
+    .logo span { color: var(--primary); }
+
+    .menu-label {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: bold;
+      margin: 0 0 14px 10px;
+      letter-spacing: 1.5px;
+    }
+
+    .nav a {
+      display: block;
+      padding: 13px 14px;
+      margin-bottom: 7px;
+      border-radius: 10px;
+      text-decoration: none;
+      color: var(--muted);
+      transition: .2s;
+      cursor: pointer;
+    }
+
+    .nav a:hover, .nav a.active {
+      color: var(--primary);
+      background: #eef2ff;
+    }
+
+    body.dark .nav a:hover,
+    body.dark .nav a.active {
+      background: #312e81;
+      color: #c7d2fe;
+    }
+
+    .sidebar-bottom {
+      margin-top: auto;
+      padding: 14px;
+      background: var(--bg);
+      border-radius: 12px;
+      font-size: 13px;
+      line-height: 1.8;
+    }
+
+    main {
+      margin-left: 245px;
+      padding: 30px;
+      width: calc(100% - 245px);
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .topbar p, .muted { color: var(--muted); }
+
+    .topbar h1 {
+      font-size: 25px;
+      margin-bottom: 8px;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    button {
+      padding: 11px 15px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      border-radius: 9px;
+      cursor: pointer;
+    }
+
+    button:hover { opacity: .8; }
+
+    .primary-btn {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    .welcome {
+      padding: 28px;
+      border-radius: 18px;
+      color: white;
+      background: linear-gradient(120deg, #4f46e5, #818cf8);
+      margin-bottom: 26px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .welcome h2 {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+
+    .welcome p {
+      color: #e0e7ff;
+      line-height: 1.7;
+    }
+
+    .welcome .emoji { font-size: 60px; }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 28px 0 17px;
+      gap: 12px;
+    }
+
+    .section-title h2 { font-size: 19px; }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 15px;
+      padding: 22px;
+      min-width: 0;
+    }
+
+    .stat-icon {
+      width: 43px;
+      height: 43px;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      font-size: 21px;
+      margin-bottom: 18px;
+      background: #eef2ff;
+    }
+
+    .purple { color: #6366f1; }
+    .green { background: #dcfce7; }
+    .orange { background: #ffedd5; }
+    .blue { background: #e0f2fe; }
+
+    .stat-number {
+      font-size: 29px;
+      font-weight: bold;
+      margin-bottom: 7px;
+    }
+
+    .stat-label { color: var(--muted); font-size: 13px; }
+
+    .content-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.7fr) minmax(240px, 1fr);
+      gap: 20px;
+    }
+
+    .project {
+      padding: 18px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .project:last-child { border-bottom: none; }
+
+    .project-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 9px;
+    }
+
+    .project h3 { font-size: 15px; margin-bottom: 6px; }
+
+    .project p {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .status {
+      padding: 6px 9px;
+      font-size: 11px;
+      border-radius: 20px;
+      white-space: nowrap;
+      background: #dcfce7;
+      color: #15803d;
+    }
+
+    .status.progress {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .progress-bar {
+      background: var(--border);
+      height: 6px;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 12px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      border-radius: 10px;
+      background: var(--primary);
+    }
+
+    .skill { margin: 22px 0; }
+
+    .skill-head {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+
+    .profile {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+
+    .avatar {
+      width: 54px;
+      height: 54px;
+      background: #e0e7ff;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 25px;
+    }
+
+    .profile h3 { font-size: 16px; margin-bottom: 6px; }
+    .profile p { font-size: 12px; color: var(--muted); }
+
+    .tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 18px;
+    }
+
+    .tag {
+      font-size: 12px;
+      background: var(--bg);
+      padding: 8px 10px;
+      border-radius: 8px;
+      color: var(--muted);
+    }
+
+    .empty { display: none; padding: 30px 0; }
+
+    footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+      padding: 35px 0 10px;
+    }
+
+    @media (max-width: 1100px) {
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .content-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 700px) {
+      .sidebar {
+        width: 66px;
+        padding: 22px 8px;
+      }
+
+      .logo {
+        font-size: 0;
+        text-align: center;
+        margin: 0 0 30px;
+      }
+
+      .logo span { font-size: 24px; }
+      .menu-label, .nav .nav-text, .sidebar-bottom { display: none; }
+      .nav a { text-align: center; padding: 14px 5px; font-size: 19px; }
+      main { margin-left: 66px; width: calc(100% - 66px); padding: 20px 13px; }
+      .topbar { align-items: flex-start; }
+      .topbar h1 { font-size: 20px; }
+      .topbar p { font-size: 12px; line-height: 1.5; }
+      .top-actions { flex-direction: column; }
+      .top-actions button { padding: 9px; font-size: 12px; }
+      .welcome { padding: 22px 18px; }
+      .welcome h2 { font-size: 19px; }
+      .welcome p { font-size: 12px; }
+      .welcome .emoji { font-size: 38px; }
+      .stats { gap: 10px; }
+      .card { padding: 15px; }
+      .stat-number { font-size: 24px; }
+      .stat-label { font-size: 11px; }
+      .stat-icon { margin-bottom: 13px; }
+      .section-title h2 { font-size: 17px; }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="logo"><span>✦</span> MyPortfolio</div>
+
+    <p class="menu-label">MENU UTAMA</p>
+    <nav class="nav">
+      <a href="#dashboard" class="active" data-page="dashboard">
+        ◫ <span class="nav-text">Dashboard</span>
+      </a>
+      <a href="#projects" data-page="projects">
+        ▣ <span class="nav-text">Proyek Saya</span>
+      </a>
+      <a href="#skills" data-page="skills">
+        ◈ <span class="nav-text">Keahlian</span>
+      </a>
+      <a href="#profile" data-page="profile">
+        ◎ <span class="nav-text">Profil Saya</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-bottom">
+      <strong>💡 Tips Hari Ini</strong>
+      <p class="muted">Terus berkarya dan perbarui portfolio kamu secara rutin!</p>
+    </div>
+  </aside>
+
+  <main>
+    <header class="topbar">
+      <div>
+        <h1 id="page-title">Dashboard</h1>
+        <p>Selamat datang di ruang kerja portfolio kamu.</p>
+      </div>
+      <div class="top-actions">
+        <button id="theme-toggle" aria-label="Ganti tema">🌙 Tema</button>
+        <button class="primary-btn" id="add-project">+ Proyek</button>
+      </div>
+    </header>
+
+    <section class="welcome" id="dashboard">
+      <div>
+        <h2>Halo, Your Name! 👋</h2>
+        <p>Selamat datang kembali.<br>
+        Mari lihat perkembangan karya terbaikmu.</p>
+      </div>
+      <div class="emoji">🚀</div>
+    </section>
+
+    <section class="stats">
+      <article class="card">
+        <div class="stat-icon purple">▣</div>
+        <div class="stat-number" id="total-projects">12</div>
+        <div class="stat-label">Total Proyek</div>
+      </article>
+      <article class="card">
+        <div class="stat-icon green">✓</div>
+        <div class="stat-number" id="completed-projects">8</div>
+        <div class="stat-label">Selesai</div>
+      </article>
+      <article class="card">
+        <div class="stat-icon orange">◷</div>
+        <div class="stat-number" id="ongoing-projects">4</div>
+        <div class="stat-label">Dalam Proses</div>
+      </article>
+      <article class="card">
+        <div class="stat-icon blue">⌘</div>
+        <div class="stat-number">6</div>
+        <div class="stat-label">Keahlian</div>
+      </article>
+    </section>
+
+    <div class="section-title" id="projects">
+      <h2>Proyek Terbaru</h2>
+      <button id="view-all">Lihat semua →</button>
+    </div>
+
+    <section class="content-grid">
+      <article class="card" id="project-list">
+        <div class="project">
+          <div class="project-head">
+            <div>
+              <h3>Website Portfolio</h3>
+              <p>HTML, CSS, JavaScript</p>
+            </div>
+            <span class="status">Selesai</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width:100%"></div>
+          </div>
+        </div>
+
+        <div class="project">
+          <div class="project-head">
+            <div>
+              <h3>Aplikasi Mobile</h3>
+              <p>UI/UX Design, Figma</p>
+            </div>
+            <span class="status progress">Proses</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width:65%"></div>
+          </div>
+        </div>
+
+        <div class="project">
+          <div class="project-head">
+            <div>
+              <h3>Sistem Informasi</h3>
+              <p>PHP, MySQL</p>
+            </div>
+            <span class="status progress">Proses</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width:40%"></div>
+          </div>
+        </div>
+
+        <div class="project">
+          <div class="project-head">
+            <div>
+              <h3>Desain Landing Page</h3>
+              <p>HTML, CSS, Responsive</p>
+            </div>
+            <span class="status">Selesai</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width:100%"></div>
+          </div>
+        </div>
+      </article>
+
+      <aside>
+        <section class="card" id="profile">
+          <div class="section-title" style="margin-top:0">
+            <h2>Profil Saya</h2>
+            <span>👤</span>
+          </div>
+          <div class="profile">
+            <div class="avatar">👨‍💻</div>
+            <div>
+              <h3>Your Name</h3>
+              <p>Web Developer</p>
+            </div>
+          </div>
+          <p class="muted" style="font-size:13px;line-height:1.8">
+            Saya seorang developer yang senang membangun website
+            modern, responsif, dan mudah digunakan.
+          </p>
+          <div class="tag-list">
+            <span class="tag">Kreatif</span>
+            <span class="tag">Disiplin</span>
+            <span class="tag">Problem Solving</span>
+          </div>
+        </section>
+
+        <section class="card" id="skills" style="margin-top:20px">
+          <div class="section-title" style="margin-top:0">
+            <h2>Keahlian</h2>
+          </div>
+          <div class="skill">
+            <div class="skill-head"><span>HTML & CSS</span><b>90%</b></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:90%"></div></div>
+          </div>
+          <div class="skill">
+            <div class="skill-head"><span>JavaScript</span><b>75%</b></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:75%"></div></div>
+          </div>
+          <div class="skill">
+            <div class="skill-head"><span>UI/UX Design</span><b>70%</b></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:70%"></div></div>
+          </div>
+        </section>
+      </aside>
+    </section>
+
+    <footer>© 2026 MyPortfolio Dashboard · Dibuat dengan ❤️</footer>
+  </main>
+</div>
+
+<script>
+  // Mode gelap dan terang
+  const themeButton = document.getElementById('theme-toggle');
+
+  themeButton.addEventListener('click', () => {
+    document.body.classList.toggle('dark');
+    themeButton.textContent = document.body.classList.contains('dark')
+      ? '☀️ Tema' : '🌙 Tema';
+  });
+
+  // Navigasi sidebar
+  const navLinks = document.querySelectorAll('.nav a');
+  const pageTitle = document.getElementById('page-title');
+
+  navLinks.forEach(link => {
+    link.addEventListener('click', () => {
+      navLinks.forEach(item => item.classList.remove('active'));
+      link.classList.add('active');
+
+      const page = link.dataset.page;
+      const titles = {
+        dashboard: 'Dashboard',
+        projects: 'Proyek Saya',
+        skills: 'Keahlian',
+        profile: 'Profil Saya'
+      };
+
+      pageTitle.textContent = titles[page];
+      document.getElementById(page).scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
+    });
+  });
+
+  // Tambahkan proyek baru
+  document.getElementById('add-project').addEventListener('click', () => {
+    const name = prompt('Masukkan nama proyek baru:');
+    if (!name || !name.trim()) return;
+
+    const project = document.createElement('div');
+    project.className = 'project';
+
+    const heading = document.createElement('h3');
+    heading.textContent = name.trim();
+
+    const description = document.createElement('p');
+    description.textContent = 'Proyek baru';
+
+    const head = document.createElement('div');
+    head.className = 'project-head';
+
+    const info = document.createElement('div');
+    info.append(heading, description);
+
+    const status = document.createElement('span');
+    status.className = 'status progress';
+    status.textContent = 'Proses';
+
+    head.append(info, status);
+    project.append(head);
+
+    const bar = document.createElement('div');
+    bar.className = 'progress-bar';
+
+    const fill = document.createElement('div');
+    fill.className = 'progress-fill';
+    fill.style.width = '0%';
+    bar.append(fill);
+    project.append(bar);
+
+    document.getElementById('project-list').prepend(project);
+
+    const total = document.getElementById('total-projects');
+    total.textContent = Number(total.textContent) + 1;
+
+    const ongoing = document.getElementById('ongoing-projects');
+    ongoing.textContent = Number(ongoing.textContent) + 1;
+  });
+
+  // Lihat seluruh proyek
+  document.getElementById('view-all').addEventListener('click', () => {
+    document.getElementById('project-list').scrollIntoView({
+      behavior: 'smooth',
+      block: 'start'
+    });
+  });
+</script>
+</body>
+</html>
