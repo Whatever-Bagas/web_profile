@@ -1,0 +1,181 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Vice City Mobile</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#101827;color:white;font-family:Arial;overflow:hidden;touch-action:none}
+canvas{display:block;width:100vw;height:100dvh;background:#6ba9a0}
+#hud{position:fixed;top:12px;left:12px;pointer-events:none;text-shadow:2px 2px #111}
+#title{font-size:21px;font-weight:bold;color:#ff68ca}
+#info{font-size:12px;margin-top:5px}
+#controls{position:fixed;inset:0;pointer-events:none}
+.pad{position:absolute;bottom:25px;left:20px;width:130px;height:130px;pointer-events:auto}
+.btn{position:absolute;border:2px solid #ffffff90;background:#1119;color:white;
+border-radius:50%;display:grid;place-items:center;font-weight:bold;
+user-select:none;touch-action:none}
+#up{width:44px;height:44px;left:43px;top:0}
+#down{width:44px;height:44px;left:43px;bottom:0}
+#left{width:44px;height:44px;left:0;top:43px}
+#right{width:44px;height:44px;right:0;top:43px}
+#actions{position:absolute;right:20px;bottom:32px;display:flex;gap:12px;align-items:end}
+.action{width:66px;height:66px;pointer-events:auto;background:#e8299cbb}
+#carBtn{width:76px;height:76px;background:#177feacc}
+#hint{position:fixed;bottom:8px;width:100%;text-align:center;font-size:10px;color:#fff9;pointer-events:none}
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="hud">
+  <div id="title">VICE CITY</div>
+  <div id="info">UANG: $2500<br>MODE: JALAN KAKI</div>
+</div>
+<div id="controls">
+  <div class="pad">
+    <div class="btn" id="up">▲</div>
+    <div class="btn" id="down">▼</div>
+    <div class="btn" id="left">◀</div>
+    <div class="btn" id="right">▶</div>
+  </div>
+  <div id="actions">
+    <div class="btn action" id="carBtn">MOBIL</div>
+    <div class="btn action" id="runBtn">LARI</div>
+  </div>
+</div>
+<div id="hint">JELAJAHI KOTA • DEKATI MOBIL LALU TEKAN MOBIL UNTUK MENYETIR</div>
+<script>
+const canvas=document.getElementById('game');
+const ctx=canvas.getContext('2d',{alpha:false});
+let W=0,H=0,scale=1;
+function resize(){
+  // Membatasi resolusi internal agar ringan di HP lama.
+  scale=Math.min(devicePixelRatio||1,1.25);
+  W=innerWidth;H=innerHeight;
+  canvas.width=Math.floor(W*scale);
+  canvas.height=Math.floor(H*scale);
+  ctx.setTransform(scale,0,0,scale,0,0);
+}
+addEventListener('resize',resize);resize();
+
+const keys={};
+document.querySelectorAll('.pad .btn').forEach(b=>{
+  const map={up:'up',down:'down',left:'left',right:'right'};
+  const k=map[b.id];
+  b.addEventListener('pointerdown',e=>{e.preventDefault();keys[k]=true});
+  ['pointerup','pointercancel','pointerleave'].forEach(ev=>
+    b.addEventListener(ev,()=>keys[k]=false));
+});
+let running=false,inCar=false;
+function hold(id,fn){
+ const b=document.getElementById(id);
+ b.addEventListener('pointerdown',e=>{e.preventDefault();fn()});
+}
+hold('runBtn',()=>running=!running);
+hold('carBtn',()=>{if(inCar){inCar=false;player.x=car.x+35;player.y=car.y+35}
+ else if(Math.hypot(player.x-car.x,player.y-car.y)<100)inCar=true});
+
+const world={w:2600,h:2600};
+const player={x:1300,y:1370,a:0};
+const car={x:1350,y:1370,a:0,speed:0};
+const buildings=[];
+for(let y=100;y<2500;y+=260){
+ for(let x=100;x<2500;x+=280){
+  buildings.push({x:x+Math.random()*35,y:y+Math.random()*35,
+    w:100+Math.random()*75,h:90+Math.random()*100,
+    c:['#e8b9a4','#f0d28a','#b5b3df','#a3d7c5','#e8a9cb'][Math.floor(Math.random()*5)]});
+ }
+}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function road(x,y){
+ return (x%280<95)||(y%260<90);
+}
+function drawWorld(cx,cy){
+ ctx.fillStyle='#65a99b';ctx.fillRect(0,0,W,H);
+ // Jalan kota
+ ctx.fillStyle='#555a68';
+ for(let x=-((cx)%280);x<W+280;x+=280)ctx.fillRect(x-30,0,95,H);
+ for(let y=-((cy)%260);y<H+260;y+=260)ctx.fillRect(0,y-25,W,90);
+ // Marka jalan
+ ctx.strokeStyle='#f8e4a2';ctx.lineWidth=2;ctx.setLineDash([15,17]);
+ for(let x=-cx%280;x<W+280;x+=280){
+  ctx.beginPath();ctx.moveTo(x+17,0);ctx.lineTo(x+17,H);ctx.stroke();
+ }
+ for(let y=-cy%260;y<H+260;y+=260){
+  ctx.beginPath();ctx.moveTo(0,y+20);ctx.lineTo(W,y+20);ctx.stroke();
+ }
+ ctx.setLineDash([]);
+ // Bangunan
+ for(const b of buildings){
+  let x=b.x-cx,y=b.y-cy;
+  if(x>W||y>H||x+b.w<0||y+b.h<0)continue;
+  ctx.fillStyle='#273847';ctx.fillRect(x+7,y+8,b.w,b.h);
+  ctx.fillStyle=b.c;ctx.fillRect(x,y,b.w,b.h);
+  ctx.fillStyle='#ffffff55';ctx.fillRect(x,y,b.w,7);
+  ctx.fillStyle='#536e83';
+  for(let wx=12;wx<b.w-8;wx+=25)
+   for(let wy=18;wy<b.h-8;wy+=25)
+    ctx.fillRect(x+wx,y+wy,11,12);
+  ctx.fillStyle='#b9c3cc';ctx.fillRect(x+b.w*.35,y+b.h*.35,20,25);
+ }
+}
+function carDraw(x,y,a){
+ ctx.save();ctx.translate(x,y);ctx.rotate(a);
+ ctx.fillStyle='#252633';ctx.fillRect(-22,-13,48,29);
+ ctx.fillStyle='#fa3f98';ctx.fillRect(-24,-12,48,24);
+ ctx.fillStyle='#bceaff';ctx.fillRect(-9,-9,17,18);
+ ctx.fillStyle='#fff4b1';ctx.fillRect(19,-9,4,6);ctx.fillRect(19,4,4,6);
+ ctx.restore();
+}
+function personDraw(x,y,a){
+ ctx.save();ctx.translate(x,y);ctx.rotate(a);
+ ctx.fillStyle='#222';ctx.beginPath();ctx.arc(2,3,9,0,7);ctx.fill();
+ ctx.fillStyle='#ffe0b5';ctx.beginPath();ctx.arc(0,-4,6,0,7);ctx.fill();
+ ctx.fillStyle='#f22caa';ctx.fillRect(-5,0,10,12);
+ ctx.restore();
+}
+function update(){
+ let speed=running?3.1:1.8;
+ if(inCar){
+  if(keys.up)car.speed=Math.min(car.speed+0.12,5);
+  else if(keys.down)car.speed=Math.max(car.speed-0.13,-2.5);
+  else car.speed*=0.97;
+  if(keys.left)car.a-=0.045*(Math.abs(car.speed)+0.5)/3;
+  if(keys.right)car.a+=0.045*(Math.abs(car.speed)+0.5)/3;
+  car.x=clamp(car.x+Math.sin(car.a)*car.speed,25,world.w-25);
+  car.y=clamp(car.y-Math.cos(car.a)*car.speed,25,world.h-25);
+ }else{
+  if(keys.up)player.y-=speed;
+  if(keys.down)player.y+=speed;
+  if(keys.left)player.x-=speed;
+  if(keys.right)player.x+=speed;
+  player.x=clamp(player.x,10,world.w-10);
+  player.y=clamp(player.y,10,world.h-10);
+ }
+}
+function frame(){
+ update();
+ let target=inCar?car:player;
+ let cx=clamp(target.x-W/2,0,world.w-W);
+ let cy=clamp(target.y-H/2,0,world.h-H);
+ drawWorld(cx,cy);
+ // Lampu dan pepohonan dekoratif
+ for(let i=0;i<40;i++){
+  let x=(i*193%world.w)-cx,y=(i*317%world.h)-cy;
+  if(x<0||x>W||y<0||y>H)continue;
+  ctx.fillStyle='#257c58';ctx.beginPath();ctx.arc(x,y,10,0,7);ctx.fill();
+  ctx.fillStyle='#4c3c32';ctx.fillRect(x-2,y+5,4,10);
+ }
+ carDraw(car.x-cx,car.y-cy,car.a);
+ if(!inCar)personDraw(player.x-cx,player.y-cy,player.a);
+ document.getElementById('info').innerHTML=
+ 'UANG: $2500<br>MODE: '+(inCar?'MENYETIR':'JALAN KAKI')+
+ '<br>KECEPATAN: '+(inCar?Math.round(Math.abs(car.speed)*20):'—');
+ requestAnimationFrame(frame);
+}
+frame();
+</script>
+</body>
+</html>
